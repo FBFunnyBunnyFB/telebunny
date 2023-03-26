@@ -1,0 +1,23 @@
+{
+  "name": "telebunny",
+  "version": "0.1.0",
+  "description": "Lightweight zero-dependency Node.js module for Telegram Bot API",
+  "main": "index.js",
+  "scripts": {
+    "build": "rm -rf build && tsc"
+  },
+  "keywords": [
+    "telegram",
+    "telegram bot",
+    "telegram bot api",
+    "telegram bunny",
+    "bunny",
+    "bot",
+    "api"
+  ],
+  "author": "Funny Bunny",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^18.15.3"
+  }
+}

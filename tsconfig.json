@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+      "noImplicitAny": false,
+      "removeComments": true,
+      "preserveConstEnums": true,
+      "sourceMap": false,
+      "module": "CommonJS",
+      "target": "ES5",
+      "outDir": "build",
+      "rootDir": "src"
+    },
+    "include": [
+      "**/*"
+    ],
+    "exclude": [
+      "node_modules",
+      "**/*.spec.ts"
+    ]
+  }
