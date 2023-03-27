@@ -7,7 +7,7 @@
       "module": "CommonJS",
       "target": "ES5",
       "outDir": "build",
-      "rootDir": "src"
+      "rootDirs": ["src", "test"]
     },
     "include": [
       "**/*"
