@@ -45,7 +45,7 @@ var https_1 = require("../src/https");
             var response;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4, new https_1.HTTPSRequest("https://www.google.com/").get()];
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/get").get()];
                     case 1:
                         response = _a.sent();
                         node_assert_1.strict.deepStrictEqual(response.hasOwnProperty('code'), true);
@@ -57,7 +57,7 @@ var https_1 = require("../src/https");
             var response;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4, new https_1.HTTPSRequest("https://www.google.com/").get()];
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/get").get()];
                     case 1:
                         response = _a.sent();
                         node_assert_1.strict.deepStrictEqual(response.hasOwnProperty('headers'), true);
@@ -69,7 +69,7 @@ var https_1 = require("../src/https");
             var response;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4, new https_1.HTTPSRequest("https://www.google.com/").get()];
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/get").get()];
                     case 1:
                         response = _a.sent();
                         node_assert_1.strict.deepStrictEqual(response.hasOwnProperty('body'), true);
@@ -81,7 +81,7 @@ var https_1 = require("../src/https");
             var response;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4, new https_1.HTTPSRequest("https://www.google.com/").get()];
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/get").get()];
                     case 1:
                         response = _a.sent();
                         node_assert_1.strict.deepStrictEqual(response.hasOwnProperty('json'), true);
@@ -89,11 +89,11 @@ var https_1 = require("../src/https");
                 }
             });
         }); });
-        (0, node_test_1.it)("https://www.google.com/ should return 200", function () { return __awaiter(void 0, void 0, void 0, function () {
+        (0, node_test_1.it)("https://httpbin.org/get should return 200", function () { return __awaiter(void 0, void 0, void 0, function () {
             var response;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4, new https_1.HTTPSRequest("https://www.google.com/").get()];
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/get").get()];
                     case 1:
                         response = _a.sent();
                         node_assert_1.strict.deepStrictEqual(response['code'], 200);
@@ -101,30 +101,31 @@ var https_1 = require("../src/https");
                 }
             });
         }); });
-        (0, node_test_1.it)("https://www.google.com/ should receive query params", function () { return __awaiter(void 0, void 0, void 0, function () {
-            var raw_body, params_body, params_body_alt;
+        (0, node_test_1.it)("https://httpbin.org/get should receive query params", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var raw_json, params_json, params_json_alt;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4, new https_1.HTTPSRequest("https://www.google.com/").get()];
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/get").get()];
                     case 1:
-                        raw_body = (_a.sent()).body;
-                        return [4, new https_1.HTTPSRequest("https://www.google.com/search?q=Hello+World").get()];
+                        raw_json = (_a.sent()).json;
+                        return [4, new https_1.HTTPSRequest("https://httpbin.org/get?message=Hello+World").get()];
                     case 2:
-                        params_body = (_a.sent()).body;
-                        return [4, new https_1.HTTPSRequest("https://www.google.com/search").get({ q: "Hello World" })];
+                        params_json = (_a.sent()).json;
+                        return [4, new https_1.HTTPSRequest("https://httpbin.org/get").get({ message: "Hello World Again" })];
                     case 3:
-                        params_body_alt = (_a.sent()).body;
-                        node_assert_1.strict.deepStrictEqual(raw_body.length !== params_body.length, true);
-                        node_assert_1.strict.deepStrictEqual(raw_body.length !== params_body_alt.length, true);
+                        params_json_alt = (_a.sent()).json;
+                        node_assert_1.strict.deepStrictEqual(raw_json['args'], {});
+                        node_assert_1.strict.deepStrictEqual(params_json['args'], { message: "Hello World" });
+                        node_assert_1.strict.deepStrictEqual(params_json_alt['args'], { message: "Hello World Again" });
                         return [2];
                 }
             });
         }); });
-        (0, node_test_1.it)("https://www.google.com/404 should return 404", function () { return __awaiter(void 0, void 0, void 0, function () {
+        (0, node_test_1.it)("https://httpbin.org/get/404 should return 404", function () { return __awaiter(void 0, void 0, void 0, function () {
             var response;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4, new https_1.HTTPSRequest("https://www.google.com/404").get()];
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/get/404").get()];
                     case 1:
                         response = _a.sent();
                         node_assert_1.strict.deepStrictEqual(response['code'], 404);
@@ -146,6 +147,168 @@ var https_1 = require("../src/https");
                         error_1 = _a.sent();
                         node_assert_1.strict.deepStrictEqual(error_1['errno'], -3008);
                         node_assert_1.strict.deepStrictEqual(error_1['code'], "ENOTFOUND");
+                        return [3, 3];
+                    case 3: return [2];
+                }
+            });
+        }); });
+        return [2];
+    });
+}); });
+(0, node_test_1.describe)("HTTPS POST Request", function () { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        (0, node_test_1.it)("should have \"code\" field in response", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var response;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/post").post("urlencoded")];
+                    case 1:
+                        response = _a.sent();
+                        node_assert_1.strict.deepStrictEqual(response.hasOwnProperty('code'), true);
+                        return [2];
+                }
+            });
+        }); });
+        (0, node_test_1.it)("should have \"headers\" field in response", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var response;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/post").post("urlencoded")];
+                    case 1:
+                        response = _a.sent();
+                        node_assert_1.strict.deepStrictEqual(response.hasOwnProperty('headers'), true);
+                        return [2];
+                }
+            });
+        }); });
+        (0, node_test_1.it)("should have \"body\" field in response", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var response;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/post").post("urlencoded")];
+                    case 1:
+                        response = _a.sent();
+                        node_assert_1.strict.deepStrictEqual(response.hasOwnProperty('body'), true);
+                        return [2];
+                }
+            });
+        }); });
+        (0, node_test_1.it)("should have \"json\" field in response", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var response;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/post").post("urlencoded")];
+                    case 1:
+                        response = _a.sent();
+                        node_assert_1.strict.deepStrictEqual(response.hasOwnProperty('json'), true);
+                        return [2];
+                }
+            });
+        }); });
+        (0, node_test_1.it)("https://httpbin.org/post should return 200", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var code;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/post").post("urlencoded")];
+                    case 1:
+                        code = (_a.sent()).code;
+                        node_assert_1.strict.deepStrictEqual(code, 200);
+                        return [2];
+                }
+            });
+        }); });
+        (0, node_test_1.it)("https://httpbin.org/post should receive urlencoded params", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var json;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/post").post("urlencoded", {
+                            test: true,
+                            test_str: "Hello World",
+                            test_obj: JSON.stringify({
+                                x: 10,
+                                y: 15
+                            })
+                        })];
+                    case 1:
+                        json = (_a.sent()).json;
+                        node_assert_1.strict.deepStrictEqual(json['form']['test'], "true");
+                        node_assert_1.strict.deepStrictEqual(json['form']['test_str'], "Hello World");
+                        node_assert_1.strict.deepStrictEqual(json['form']['test_obj'], "{\"x\":10,\"y\":15}");
+                        return [2];
+                }
+            });
+        }); });
+        (0, node_test_1.it)("https://httpbin.org/post should receive multipart params", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var json, field1, field2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/post").post("multipart", [
+                            {
+                                name: "multipart_field1",
+                                data: Buffer.from(JSON.stringify({
+                                    test: true,
+                                    test_str: "Hello World",
+                                    test_obj: {
+                                        x: 10,
+                                        y: 15
+                                    }
+                                }))
+                            }, {
+                                name: "multipart_field2",
+                                data: Buffer.from(JSON.stringify({
+                                    test: false,
+                                    test_arr: ["First", "Second", true],
+                                    test_obj: {
+                                        nest_obj: {
+                                            nested: true
+                                        }
+                                    }
+                                }))
+                            }
+                        ])];
+                    case 1:
+                        json = (_a.sent()).json;
+                        node_assert_1.strict.deepStrictEqual(json['form'].hasOwnProperty("multipart_field1"), true);
+                        node_assert_1.strict.deepStrictEqual(json['form'].hasOwnProperty("multipart_field2"), true);
+                        field1 = JSON.parse(json['form']['multipart_field1']);
+                        node_assert_1.strict.deepStrictEqual(field1['test'], true);
+                        node_assert_1.strict.deepStrictEqual(field1['test_str'], "Hello World");
+                        node_assert_1.strict.deepStrictEqual(field1['test_obj'], { x: 10, y: 15 });
+                        field2 = JSON.parse(json['form']['multipart_field2']);
+                        node_assert_1.strict.deepStrictEqual(field2['test'], false);
+                        node_assert_1.strict.deepStrictEqual(field2['test_arr'], ["First", "Second", true]);
+                        node_assert_1.strict.deepStrictEqual(field2['test_obj'], { nest_obj: { nested: true } });
+                        node_assert_1.strict.deepStrictEqual(field2['test_str'], undefined);
+                        return [2];
+                }
+            });
+        }); });
+        (0, node_test_1.it)("https://httpbin.org/post should return 404", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var code;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, new https_1.HTTPSRequest("https://httpbin.org/post/404").post("urlencoded")];
+                    case 1:
+                        code = (_a.sent()).code;
+                        node_assert_1.strict.deepStrictEqual(code, 404);
+                        return [2];
+                }
+            });
+        }); });
+        (0, node_test_1.it)("https://bad_host.com/ should return error", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var response, error_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4, new https_1.HTTPSRequest("https://bad_host.com/").post("urlencoded")];
+                    case 1:
+                        response = _a.sent();
+                        return [3, 3];
+                    case 2:
+                        error_2 = _a.sent();
+                        node_assert_1.strict.deepStrictEqual(error_2['errno'], -3008);
+                        node_assert_1.strict.deepStrictEqual(error_2['code'], "ENOTFOUND");
                         return [3, 3];
                     case 3: return [2];
                 }
