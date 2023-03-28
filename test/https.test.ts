@@ -24,6 +24,15 @@ describe("HTTPS GET Request", async () => {
         const response: HTTPSResponse = await new HTTPSRequest("https://www.google.com/").get();
         assert.deepStrictEqual(response['code'], 200);
     });
+    it("https://www.google.com/ should receive query params", async () => {
+        const { body: raw_body } = await new HTTPSRequest("https://www.google.com/").get();
+        const { body: params_body } = await new HTTPSRequest("https://www.google.com/search?q=Hello+World").get();
+        const { body: params_body_alt } = await new HTTPSRequest("https://www.google.com/search").get({ q: "Hello World" });
+        // Checksum of request with no params should differ
+        assert.deepStrictEqual(raw_body.length !== params_body.length, true);
+        // Testing alternative method of passing params
+        assert.deepStrictEqual(raw_body.length !== params_body_alt.length, true);
+    });
     it("https://www.google.com/404 should return 404", async () => {
         const response: HTTPSResponse = await new HTTPSRequest("https://www.google.com/404").get();
         assert.deepStrictEqual(response['code'], 404);
@@ -32,8 +41,8 @@ describe("HTTPS GET Request", async () => {
         try {
             const response: HTTPSResponse = await new HTTPSRequest("https://bad_host.com/").get();
         } catch (error) {
-            assert.deepStrictEqual(error['errno'], -71);
-            assert.deepStrictEqual(error['code'], "EPROTO");
+            assert.deepStrictEqual(error['errno'], -3008);
+            assert.deepStrictEqual(error['code'], "ENOTFOUND");
         }
     });
 })

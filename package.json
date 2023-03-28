@@ -1,6 +1,6 @@
 {
   "name": "telebunny",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Lightweight zero-dependency Node.js module for Telegram Bot API",
   "main": "index.js",
   "scripts": {

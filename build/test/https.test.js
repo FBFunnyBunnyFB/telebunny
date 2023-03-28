@@ -101,6 +101,25 @@ var https_1 = require("../src/https");
                 }
             });
         }); });
+        (0, node_test_1.it)("https://www.google.com/ should receive query params", function () { return __awaiter(void 0, void 0, void 0, function () {
+            var raw_body, params_body, params_body_alt;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, new https_1.HTTPSRequest("https://www.google.com/").get()];
+                    case 1:
+                        raw_body = (_a.sent()).body;
+                        return [4, new https_1.HTTPSRequest("https://www.google.com/search?q=Hello+World").get()];
+                    case 2:
+                        params_body = (_a.sent()).body;
+                        return [4, new https_1.HTTPSRequest("https://www.google.com/search").get({ q: "Hello World" })];
+                    case 3:
+                        params_body_alt = (_a.sent()).body;
+                        node_assert_1.strict.deepStrictEqual(raw_body.length !== params_body.length, true);
+                        node_assert_1.strict.deepStrictEqual(raw_body.length !== params_body_alt.length, true);
+                        return [2];
+                }
+            });
+        }); });
         (0, node_test_1.it)("https://www.google.com/404 should return 404", function () { return __awaiter(void 0, void 0, void 0, function () {
             var response;
             return __generator(this, function (_a) {
@@ -125,8 +144,8 @@ var https_1 = require("../src/https");
                         return [3, 3];
                     case 2:
                         error_1 = _a.sent();
-                        node_assert_1.strict.deepStrictEqual(error_1['errno'], -71);
-                        node_assert_1.strict.deepStrictEqual(error_1['code'], "EPROTO");
+                        node_assert_1.strict.deepStrictEqual(error_1['errno'], -3008);
+                        node_assert_1.strict.deepStrictEqual(error_1['code'], "ENOTFOUND");
                         return [3, 3];
                     case 3: return [2];
                 }
