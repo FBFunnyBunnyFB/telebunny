@@ -6,11 +6,11 @@
       "sourceMap": false,
       "module": "CommonJS",
       "target": "ES5",
-      "outDir": "lib",
-      "rootDir": "src"
+      "outDir": "build",
+      "rootDir": "../"
     },
     "include": [
-      "src"
+      "**/*.test.ts",
     ],
     "exclude": [
       "node_modules",

@@ -1,11 +1,11 @@
 {
   "name": "telebunny",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Lightweight zero-dependency Node.js module for Telegram Bot API",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf build && tsc",
-    "test": "npm run build && node build/test/index.test.js"
+    "build": "rm -rf lib && tsc",
+    "test": "rm -rf test/build && tsc -p test/tsconfig.test.json && node test/index.js"
   },
   "keywords": [
     "telegram",
@@ -16,6 +16,13 @@
     "bot",
     "api"
   ],
+  "files": [
+    "lib/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FBFunnyBunnyFB/telebunny.git"
+  },
   "author": "Funny Bunny",
   "license": "MIT",
   "devDependencies": {
