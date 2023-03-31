@@ -15,7 +15,7 @@ class HTTPSRequest {
     }
     private _enrichURL(params: Object | null | undefined): string | void {
         if(!params) return;
-        this._url = this._url.split('?')[0].concat('?', Object.keys(params).map(k => k.concat('=', params[k])).join('&'));
+        this._url = this._url.split('?')[0].concat('?', Object.keys(params).map(k => k.concat('=', encodeURIComponent(params[k]))).join('&'));
     }
     private _parseData(response, data: Buffer): HTTPSResponse {
         function getJSON(data: Buffer): Object | boolean {
@@ -69,7 +69,7 @@ class HTTPSRequest {
         return _getForm(params, boundary);
     }
     private _processURLEncoded(params?: Object) {        
-        return new Promise((resolve, reject) => {            
+        return new Promise((resolve, reject) => {                        
             this._enrichURL(params);
 
             const hostname: string = this._url.split('/')[2];
