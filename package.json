@@ -1,8 +1,9 @@
 {
   "name": "telebunny",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Lightweight zero-dependency Node.js module for Telegram Bot API",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "build": "rm -rf lib && tsc",
     "test": "rm -rf test/build && tsc -p test/tsconfig.test.json && node test/index.js"

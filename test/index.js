@@ -1,1 +1,1 @@
-module.exports = require('./build/test/https.test.js');
+export * from './build/test/https.test.js';

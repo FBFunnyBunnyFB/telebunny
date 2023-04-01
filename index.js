@@ -1,1 +1,1 @@
-module.exports = require('./lib/telebunny.js');
+export { default as TeleBunny } from './lib/telebunny.js';

@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
 
-import { HTTPSRequest, HTTPSResponse } from "../src/https";
+import { HTTPSRequest, HTTPSResponse } from "../src/https.js";
 
 describe("HTTPS GET Request", async () => {
     it("should have \"code\" field in response", async () => {

@@ -4,8 +4,8 @@
       "removeComments": true,
       "preserveConstEnums": true,
       "sourceMap": false,
-      "module": "CommonJS",
-      "target": "ES5",
+      "module": "ES6",
+      "target": "ES6",
       "outDir": "build",
       "rootDir": "../"
     },
