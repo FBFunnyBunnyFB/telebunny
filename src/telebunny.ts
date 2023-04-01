@@ -89,7 +89,7 @@ class TeleBunny {
         }
     }
     private _telegramFileRequest(method_name: string, data?: object) : Promise<any> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             async function _makeRequest(content_type: 'urlencoded' | 'multipart', data) : Promise<object> {
                 const response: HTTPSResponse = await new HTTPSRequest(`api.telegram.org/bot${this._token}/${method_name}`).post(content_type, data);
                 if(response.json.ok || response.code === 200) {
@@ -111,56 +111,70 @@ class TeleBunny {
                     return result;
                 })
             }
-            function _getLocalFiles(file_identifiers) : Promise<Array<string> | false> {
+            function _getLocalFiles(input_obj: object, file_fields: string[]) : Promise<string[]> {
                 return new Promise(resolve => {
-                    let result = [];
-                    file_identifiers.forEach(async (identifier: string, i: number) => {
-                        try {
-                            const stats = await fs.promises.stat(identifier);
-                            if(stats.isFile()) result.push(identifier);
-                        } catch (error) { } finally {
-                            if(i === file_identifiers.length - 1) {
-                                resolve(result.length > 0 ? result : false);
-                            }
-                        }
+                    let pending_stats = [];
+                    // Remove missing file fields
+                    file_fields = file_fields.filter(f_f => input_obj.hasOwnProperty(f_f));
+                    file_fields.forEach(field => {
+                        pending_stats.push(fs.promises.stat(input_obj[field]));
+                    });
+                    // Wait until all data received
+                    Promise.allSettled(pending_stats).then((promise_results: PromiseSettledResult<fs.Stats>[]) => {
+                        // If local file exists - true, otherwise - false
+                        const local_file_map = promise_results.map(promise => {
+                            if(promise['status'] === "rejected") return false;
+                            return promise['value'].isFile()
+                        });
+                        // Get local files path using local_file_map
+                        let result = [];
+                        file_fields.forEach((field, i) => {
+                            if(local_file_map[i]) result.push(input_obj[field])
+                        });
+                        resolve(result);
                     });
                 })
             }
-            const file_keys = ['certificate', 'photo', 'audio', 'document', 'thumb', 'video', 'animation', 'voice', 'video_note', 'sticker', 'thumbnail'];
-            const file_field_keys = file_keys.filter((key) => data.hasOwnProperty(key));
-            if(data['media']) {
-                try {
-                    data['media'] = JSON.parse(data['media']);
-                    data['media'].forEach((media_obj, i) => {
-                        const media_key = i.toString();
-                        data[media_key] = media_obj['media'];
-                        media_obj['media'] = "attach://"+i;
-                        file_field_keys.push(media_key);
-                        if(media_obj['thumb']) {
-                            const thumb_key = 't'.concat(i.toString());
-                            data[thumb_key] = media_obj['thumb'];
-                            media_obj['thumb'] = "attach://"+thumb_key;
-                            file_field_keys.push(thumb_key);
+            function _getMultifileField(input: object): string {
+                const multifile_field_keys = ['media', 'stickers'];
+                return Object.keys(input).find(field => multifile_field_keys.includes(field));
+            }
+            function _getFileFields(input: object): string[] {
+                const file_field_keys = ['certificate', 'photo', 'audio', 'document', 'thumbnail', 'video', 'animation', 'voice', 'video_note', 'sticker'];
+                return Object.keys(input).filter(field => file_field_keys.includes(field));
+            }
+            const [multifile_field, file_fields] = [_getMultifileField(data), _getFileFields(data)];
+            if(multifile_field) {
+                let [local_files, attach_index] = [[], 0];
+                const file_obj_arr = JSON.parse(data[multifile_field]);
+                const file_obj_fields = ['media', 'sticker', 'thumbnail'];
+                for (const file_obj of file_obj_arr) {
+                    const obj_local_files: string[] = await _getLocalFiles(file_obj, file_obj_fields).catch(error => { reject(error); return [] });
+                    obj_local_files.forEach(local_file => {
+                        for (const file_obj_field of file_obj_fields) {
+                            if(file_obj[file_obj_field] === local_file) {
+                                const media_key = attach_index.toString();
+                                data[media_key] = file_obj[file_obj_field];
+                                file_obj[file_obj_field] = "attach://"+attach_index;
+                                local_files.push(data[media_key]);
+                                attach_index++;
+                            }
                         }
                     });
-                    data['media'] = JSON.stringify(data['media']);
-                } catch (error) {
-                    throw new TeleBunnyError("Cannot parse passed media object!")
                 }
-            }
-            if(file_field_keys.length === 0) throw new TeleBunnyError("Cannot find any supported InputFile field!");
-            const file_identifiers = file_field_keys.map((key) => data[key]);
-            _getLocalFiles(file_identifiers).then((local: Array<string> | false) => {
-                try {
-                    if(local) {
-                        resolve(_makeRequest.call(this, 'multipart', _convertToMulipart(data, local)));
+                data[multifile_field] = JSON.stringify(file_obj_arr);
+                resolve(_makeRequest.call(this, 'multipart', _convertToMulipart(data, local_files)));
+            } else if (file_fields.length > 0) {
+                _getLocalFiles(data, file_fields).then((local_files: string[]) => {
+                    if(local_files.length > 0) {
+                        resolve(_makeRequest.call(this, 'multipart', _convertToMulipart(data, local_files)));
                     } else {
                         resolve(_makeRequest.call(this, 'urlencoded', data));
                     }
-                } catch (error) {
-                    reject(error);
-                }
-            });
+                }).catch(error => reject(error));
+            } else {
+                throw new TeleBunnyError("Cannot find any supported InputFile field!");
+            }
         })
     }
     private _initPolling(options: TeleBunny.options) {
