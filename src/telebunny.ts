@@ -236,7 +236,7 @@ class TeleBunny {
                 this._polling._alive = false;
                 throw new TeleBunnyError(error);
             }
-        } else {
+        } else if (this._polling._alive) {
             setTimeout(() => this._getUpdates(), this._polling._interval - time_diff);
         }
     }
