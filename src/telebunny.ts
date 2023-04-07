@@ -6,8 +6,9 @@ namespace TelegramBotAPI {
     export type update_type = "message" | "edited_message" | "channel_post" | "edited_channel_post" | "inline_query" | "chosen_inline_result" | "callback_query" | "shipping_query" | "pre_checkout_query" | "poll" | "poll_answer" | "my_chat_member" | "chat_member" | "chat_join_request";
 }
 namespace TeleBunny {
-    export interface options {
+    export interface PollingOptions {
         polling: boolean;
+        alive?: boolean;
         frequency?: number;
         interval?: number;
         limit?: number;
@@ -21,16 +22,6 @@ namespace TeleBunny {
         description?: string;
         result?: object;
     }
-    export interface polling {
-        _alive: boolean;
-        _interval: number;
-        _last_update: number;
-        _offset?: number;
-        _limit?: number;
-        _timeout?: number;
-        _allow?: string[];
-        _ignore?: string[];
-    }
 }
 class TeleBunnyError {
     name: string;
@@ -41,11 +32,95 @@ class TeleBunnyError {
         return new Error(this.name.concat(' ', this.message));
     }
 }
+class TeleBunnyPolling {
+    private _alive: boolean
+    private _interval: number;
+    private _last_update: number;
+    private _offset: number;
+    private _limit: number;
+    private _timeout: number;
+    private _allow: TelegramBotAPI.update_type[];
+    private _timer: NodeJS.Timeout;
+    constructor(params: TeleBunny.PollingOptions) {
+        this._alive = this._getAliveValue(params['alive']);
+        this._interval = this._getIntervalValue(params['interval'], params['frequency']),
+        this._timeout = this._getTimeoutValue(params['timeout']);
+        this._limit = this._getLimitValue(params['limit']);
+        this._allow = this._getAllowValue(params['allow'], params['ignore']);
+        this._last_update = 0;
+        this._offset = 0;
+    }
+    private _numberBetween(number: number, min: number, max: number): number {
+        if(number < min) number = min;
+        if(number > max) number = max;
+        return number;
+    }
+    private _getAliveValue(alive: boolean): boolean {
+        return typeof alive === "boolean" ? alive : true;
+    }
+    private _getIntervalValue(interval: number, frequency: number): number {
+        if(typeof interval === "number") {
+            return this._numberBetween(interval, 100, Infinity);
+        } else if (typeof frequency === "number") {
+            return Math.round(1000 / this._numberBetween(frequency, 1e-100, 10));
+        } else {
+            return 300;
+        }
+    }
+    private _getLimitValue(limit: number): number {
+        if(typeof limit === "number") {
+            return this._numberBetween(limit, 1, 100);
+        } else {
+            return 100;
+        }
+    }
+    private _getTimeoutValue(timeout: number): number {
+        if(typeof timeout === "number") {
+            return this._numberBetween(timeout, 0, Infinity);
+        } else {
+            return 0;
+        }
+    }
+    private _getAllowValue(allow: TelegramBotAPI.update_type[], ignore: TelegramBotAPI.update_type[]): TelegramBotAPI.update_type[] {
+        const update_types: TelegramBotAPI.update_type[] = [
+            "message", "edited_message", "channel_post", 
+            "edited_channel_post", "inline_query", "chosen_inline_result", 
+            "callback_query", "shipping_query", "pre_checkout_query", 
+            "poll", "poll_answer", "my_chat_member", "chat_member", "chat_join_request"
+        ];
+        ignore = Array.isArray(ignore) ? ignore : [];
+        allow = Array.isArray(allow) ? allow : update_types;
+        return allow.filter(u_t => !ignore.includes(u_t));
+    }
+    public start(): void { this._alive = true; }
+    public stop(): void {
+        this._alive = false;
+        clearTimeout(this._timer);
+    }
+    public update(): void { this._last_update = Date.now(); }
+    public setTimeout(callback: () => any, miliseconds: number): void {
+        if(this._timer) clearTimeout(this._timer);
+        if(this._alive) {
+            this._timer = setTimeout(callback, miliseconds);
+        }
+    }
+    public get alive(): boolean { return this._alive; }
+    public get limit(): number { return this._limit; }
+    public set offset(value: number) {
+        if(typeof value !== "number") throw new TeleBunnyError("Polling offset value type must be number! Got " + typeof value);
+        this._offset = value;
+    }
+    public get offset(): number { return this._offset; }
+    public get timeout(): number { return this._timeout; }
+    public get interval(): number { return this._interval; }
+    public get last_update(): number { return this._last_update; }
+    public get allow(): TelegramBotAPI.update_type[] { return this._allow; }
+}
 class TeleBunny {
     private _token: string;
     private _emitter: EventEmitter;
-    private _polling?: TeleBunny.polling;
-    constructor(api_token: string, options: TeleBunny.options) {
+    private _polling?: TeleBunnyPolling;
+    constructor(api_token: string, options?: TeleBunny.PollingOptions) {
         this._token = api_token;
         this._emitter = new EventEmitter();
         if(options['polling']) this._initPolling(options);
@@ -177,55 +252,28 @@ class TeleBunny {
             }
         })
     }
-    private _initPolling(options: TeleBunny.options) {
-        function numberBetween(number: number, min: number, max: number): number {
-            if(number < min) number = min;
-            if(number > max) number = max;
-            return number;
-        }
-        function getAllowValue(allow, ignore): TelegramBotAPI.update_type[] {
-            ignore = Array.isArray(ignore) ? ignore : [];
-            allow = Array.isArray(allow) ? allow : update_types;
-            return allow.filter(o => !ignore.includes(o));
-        }
-        function getIntervalValue(interval, frequency): number {
-            if(typeof interval === 'number') {
-                return numberBetween(interval, 1, Infinity);
-            } else if (typeof frequency === 'number') {
-                return Math.round(1000 / numberBetween(frequency, 0.00001, 10));
-            } else {
-                return 300;
-            }
-        }
-        const update_types: TelegramBotAPI.update_type[] = ["message", "edited_message", "channel_post", "edited_channel_post", "inline_query", "chosen_inline_result", "callback_query", "shipping_query", "pre_checkout_query", "poll", "poll_answer", "my_chat_member", "chat_member", "chat_join_request"];
-        const allowed_updates = getAllowValue(options['allow'], options['ignore']) || update_types;
-        if(allowed_updates.length <= 0) return;
-        this._polling = {
-            _alive: true,
-            _interval: getIntervalValue(options['interval'], options['frequency']),
-            _last_update: 0,
-            _offset: options['offset'],
-            _limit: numberBetween(options['limit'], 1, 100) || 100,
-            _timeout: numberBetween(options['timeout'], 0, Infinity) || 0,
-            _allow: allowed_updates
-        }
+    private _initPolling(options: TeleBunny.PollingOptions) {
+        this._polling = new TeleBunnyPolling(options);
         this._getUpdates();
     }
     private async _getUpdates() {
-        const time_diff = Date.now() - this._polling._last_update;
-        if(this._polling._alive && time_diff > this._polling._interval) {
+        const polling = this._polling;
+        const time_diff = Date.now() - polling['last_update'];
+        if(!polling['alive'] || polling['allow'].length <= 0) return;
+        if(time_diff >= polling['interval']) {
             try {
+                const { offset, limit, timeout, allow } = polling;
                 const data = await this._telegramRequest("getUpdates", {
-                    offset: this._polling._offset,
-                    limit: this._polling._limit,
-                    timeout: this._polling._timeout,
-                    allowed_updates: JSON.stringify(this._polling._allow)
+                    offset: offset,
+                    limit: limit,
+                    timeout: timeout,
+                    allowed_updates: JSON.stringify(allow)
                 });
-                this._polling._last_update = Date.now();
+                polling.update();
                 if(data.length > 0) {
-                    this._polling._offset = data[data.length - 1]['update_id'] + 1;
+                    polling['offset'] = data[data.length - 1]['update_id'] + 1;
                     data.forEach(item => {
-                        const allowed_tag = this._polling._allow.filter(u => item.hasOwnProperty(u)).join();
+                        const allowed_tag = polling['allow'].filter(u_t => item.hasOwnProperty(u_t)).join();
                         if(!!allowed_tag) {
                             this._emitter.emit(allowed_tag, item[allowed_tag]);
                         }
@@ -233,11 +281,11 @@ class TeleBunny {
                 }
                 this._getUpdates();
             } catch (error) {
-                this._polling._alive = false;
+                polling.stop();
                 throw new TeleBunnyError(error);
             }
-        } else if (this._polling._alive) {
-            setTimeout(() => this._getUpdates(), this._polling._interval - time_diff);
+        } else {
+            polling.setTimeout(() => this._getUpdates(), polling['interval'] - time_diff);
         }
     }
     // Listeners
@@ -248,9 +296,18 @@ class TeleBunny {
         this._emitter.on(event_name, callback);
     }
     // Getting updates
-    public setWebhook(url: string, options?: object) {
-        if(options['allow'].length <= 0) return;
-        return options['certificate'] ? this._telegramFileRequest("setWebhook", options) : this._telegramRequest("setWebhook", options);
+    public startPolling(options?: TeleBunny.PollingOptions): void {
+        this.stopPolling();
+        this._initPolling(Object.assign({ alive: true }, options));
+    }
+    public stopPolling(): void {
+        if(this._polling) this._polling.stop();
+    }
+    public setWebhook(url: string, options?: Object);
+    public setWebhook(options: Object);
+    public setWebhook(...options) {
+        this.stopPolling();
+        return options && options['certificate'] ? this._telegramFileRequest("setWebhook", this._parseMethodArgs(options, ["url"])) : this._telegramRequest("setWebhook", this._parseMethodArgs(options, ["url"]));
     }
     public deleteWebhook(drop_pending_updates?: boolean) {
         return this._telegramRequest("deleteWebhook", { drop_pending_updates: drop_pending_updates });
