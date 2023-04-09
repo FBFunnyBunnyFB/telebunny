@@ -289,11 +289,20 @@ class TeleBunny {
         }
     }
     // Listeners
-    public got(event_name: string, callback: (...any) => void) {
-        this._emitter.on(event_name, callback);
+    public got(event_name: string, listener: (...any) => void) {
+        this._emitter.on(event_name, listener);
     }
-    public on(event_name: string, callback: (...any) => void) {
-        this._emitter.on(event_name, callback);
+    public revoke(event_name: string, listener: (...any) => void) {
+        this._emitter.off(event_name, listener);
+    }
+    public on(event_name: string, listener: (...any) => void) {
+        this._emitter.on(event_name, listener);
+    }
+    public off(event_name: string, listener: (...any) => void) {
+        this._emitter.off(event_name, listener);
+    }
+    public once(event_name: string, listener: (...any) => void) {
+        this._emitter.once(event_name, listener);
     }
     // Getting updates
     public startPolling(options?: TeleBunny.PollingOptions): void {
