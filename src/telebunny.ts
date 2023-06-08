@@ -643,6 +643,12 @@ class TeleBunny {
     public getMyCommands(options?: Object) {
         return this._telegramRequest("getMyCommands", this._parseMethodArgs([options]));
     }
+    public setMyName(options?: Object) {
+        return this._telegramRequest("setMyName", this._parseMethodArgs([options]));
+    }
+    public getMyName(options?: Object) {
+        return this._telegramRequest("getMyName", this._parseMethodArgs([options]));
+    }
     public setMyDescription(options?: Object) {
         return this._telegramRequest("setMyDescription", this._parseMethodArgs([options]));
     }
