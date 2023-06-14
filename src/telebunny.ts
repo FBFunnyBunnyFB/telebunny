@@ -123,18 +123,18 @@ class TeleBunny {
     constructor(api_token: string, options?: TeleBunny.PollingOptions) {
         this._token = api_token;
         this._emitter = new EventEmitter();
-        if(options['polling']) this._initPolling(options);
+        if(options && options['polling']) this._initPolling(options);
     }
     private _parseMethodArgs(options: any[], options_mask?: string[]): object {
         function isRawOptions() {
             return options.length === 1 &&
-            typeof options[0] === 'object' &&
+            typeof options[0] === "object" &&
             options[0]['constructor'] === Object;
         }
         function stringifyObjects(input) {
             let result = input;
             Object.keys(input).forEach(key => {
-                if(typeof input[key] === 'object') result[key] = JSON.stringify(input[key]);
+                if(typeof input[key] === "object") result[key] = JSON.stringify(input[key]);
             });
             return result;
         }
@@ -275,7 +275,7 @@ class TeleBunny {
                     data.forEach(item => {
                         const allowed_tag = polling['allow'].filter(u_t => item.hasOwnProperty(u_t)).join();
                         if(!!allowed_tag) {
-                            this._emitter.emit(allowed_tag, item[allowed_tag]);
+                            this.processUpdate(item);
                         }
                     });
                 }
@@ -311,6 +311,22 @@ class TeleBunny {
     }
     public stopPolling(): void {
         if(this._polling) this._polling.stop();
+    }
+    public processUpdate(data: Buffer | Object) {
+        try {
+            data = JSON.parse(
+                Buffer.isBuffer(data) 
+                ? data.toString('utf8') 
+                : JSON.stringify(data)
+            );
+        } catch (error) {
+           throw new TeleBunnyError(`Cannot parse incoming Update: ${error}\n${data}\n`);         
+        }
+        if(Object.prototype.toString.call(data) !== '[object Object]') return;
+        const update_type = Object.keys(data).find(key => key !== "update_id");
+        if(typeof data['update_id'] === "number" && update_type) {
+            this._emitter.emit(update_type, data[update_type]);
+        }
     }
     public setWebhook(url: string, options?: Object);
     public setWebhook(options: Object);
